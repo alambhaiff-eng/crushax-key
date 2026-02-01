@@ -2,103 +2,163 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Crush Ax Mods Key Generator</title>
-
+<title>CRUSH AX MODS | Secure Key</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
-  background:#0b0b0b;
-  color:#ffffff;
-  font-family:Arial;
-  text-align:center;
-  padding-top:80px;
+  background:#050505;
+  color:#00fff0;
+  font-family:Arial,Helvetica,sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
 }
 .box{
-  background:#111;
   width:330px;
-  margin:auto;
   padding:25px;
-  border-radius:12px;
-  box-shadow:0 0 15px #00ffcc;
+  border-radius:16px;
+  background:#0c0c0c;
+  border:2px solid #00fff0;
+  box-shadow:0 0 30px rgba(0,255,240,0.25);
+  text-align:center;
 }
-h2{
-  color:#00ffcc;
-}
-#key{
-  font-size:26px;
-  font-weight:bold;
-  margin:20px 0;
-  color:#00ff66;
-}
-#status{
-  font-size:14px;
-  margin-top:10px;
+h2{margin:0 0 8px 0;}
+.key{
+  margin:15px 0;
+  padding:12px;
+  border-radius:10px;
+  background:#000;
+  border:1px solid #00fff0;
+  font-size:17px;
+  color:#00ff7f;
+  word-break:break-all;
 }
 button{
-  padding:12px 25px;
-  font-size:18px;
-  background:#00ffcc;
+  width:100%;
+  padding:14px;
   border:none;
-  border-radius:6px;
+  border-radius:12px;
+  background:#00fff0;
+  color:#000;
+  font-size:16px;
+  font-weight:bold;
   cursor:pointer;
+  margin-top:8px;
 }
-button:hover{
-  background:#00ccaa;
-}
+.copy{background:#111;color:#0ff;border:1px solid #0ff}
+.msg{margin-top:10px;font-size:13px;color:#9ff}
+.footer{margin-top:15px;font-size:11px;color:#6ff;opacity:0.8}
 </style>
 </head>
-
 <body>
 
 <div class="box">
   <h2>CRUSH AX MODS</h2>
-  <div id="key">CRUSHAX-XXXXX</div>
-  <button onclick="generateKey()">Generate Key</button>
-  <div id="status"></div>
+  <div class="key" id="keyBox">----</div>
+
+  <button onclick="generateKey()">GENERATE KEY</button>
+  <button class="copy" onclick="copyKey()">COPY KEY</button>
+
+  <div class="msg" id="msg"></div>
+  <div class="footer">Secured by CRUSH AX</div>
 </div>
 
 <script>
-const VALID_TIME = 24 * 60 * 60 * 1000; // 24 hours
+// 🔐 FIREBASE DB
+const DB_URL = "https://crushaxpanel-13372-default-rtdb.firebaseio.com";
 
-function generateKey(){
-  let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let random = "";
-  for(let i=0;i<5;i++){
-    random += chars[Math.floor(Math.random()*chars.length)];
+// ⏱ VALIDITY
+const VALIDITY_HOURS = 24;
+
+// 📱 DEVICE FINGERPRINT
+function getDeviceId(){
+  let id = localStorage.getItem("crushax_device");
+  if(!id){
+    id = "DEV-" + crypto.randomUUID();
+    localStorage.setItem("crushax_device", id);
   }
-  let key = "CRUSHAX-" + random;
-  let now = new Date().getTime();
-
-  localStorage.setItem("crushax_key", key);
-  localStorage.setItem("crushax_time", now);
-
-  showKey();
+  return id;
 }
 
-function showKey(){
-  let key = localStorage.getItem("crushax_key");
-  let time = localStorage.getItem("crushax_time");
-
-  if(!key || !time){
-    return;
-  }
-
-  let now = new Date().getTime();
-  if(now - time > VALID_TIME){
-    document.getElementById("key").innerText = "KEY EXPIRED";
-    document.getElementById("key").style.color = "red";
-    document.getElementById("status").innerText = "Please generate new key";
-    localStorage.removeItem("crushax_key");
-    localStorage.removeItem("crushax_time");
-  } else {
-    let remaining = VALID_TIME - (now - time);
-    let hours = Math.floor(remaining / (1000*60*60));
-    document.getElementById("key").innerText = key;
-    document.getElementById("status").innerText =
-      "Valid for: " + hours + " hour(s)";
+// 🌐 GET IP
+async function getIP(){
+  try{
+    const r = await fetch("https://api.ipify.org?format=json");
+    const j = await r.json();
+    return j.ip;
+  }catch{
+    return "UNKNOWN";
   }
 }
 
-showKey();
+// 🧹 AUTO CLEANUP (expired keys delete)
+async function cleanupExpired(){
+  const now = Date.now();
+  const r = await fetch(`${DB_URL}/ValidKeys.json`);
+  if(!r.ok) return;
+  const data = await r.json() || {};
+  for(const k in data){
+    if(data[k].ExpiryMs && data[k].ExpiryMs < now){
+      fetch(`${DB_URL}/ValidKeys/${k}.json`,{method:"DELETE"});
+    }
+  }
+}
+
+// 🔑 GENERATE KEY
+async function generateKey(){
+  await cleanupExpired();
+
+  const device = getDeviceId();
+  const ip = await getIP();
+
+  // check existing key for device
+  const r = await fetch(`${DB_URL}/ValidKeys.json`);
+  const data = await r.json() || {};
+  for(const k in data){
+    if(data[k].DeviceId === device){
+      document.getElementById("keyBox").innerText = k;
+      document.getElementById("msg").innerText =
+        "This device already has a valid key";
+      return;
+    }
+  }
+
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let rnd="";
+  for(let i=0;i<5;i++) rnd+=chars[Math.floor(Math.random()*chars.length)];
+  const key = "CRUSHAX-" + rnd;
+
+  const now = Date.now();
+  const expiry = now + (VALIDITY_HOURS*60*60*1000);
+
+  const payload = {
+    Key:key,
+    DeviceId:device,
+    IP:ip,
+    Created:new Date(now).toISOString(),
+    ExpiryMs:expiry,
+    ExpiryReadable:new Date(expiry).toLocaleString(),
+    IssuedBy:"CRUSH AX MODS"
+  };
+
+  await fetch(`${DB_URL}/ValidKeys/${key}.json`,{
+    method:"PUT",
+    body:JSON.stringify(payload)
+  });
+
+  document.getElementById("keyBox").innerText = key;
+  document.getElementById("msg").innerText =
+    "Key generated • Locked to this device • 24h valid";
+}
+
+// 📋 COPY
+function copyKey(){
+  const k = document.getElementById("keyBox").innerText;
+  if(!k || k==="----") return;
+  navigator.clipboard.writeText(k);
+  document.getElementById("msg").innerText = "Key copied to clipboard";
+}
 </script>
 
 </body>
