@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Crush Ax Mods Key Generator</title>
+
+<style>
+body{
+  background:#0b0b0b;
+  color:#ffffff;
+  font-family:Arial;
+  text-align:center;
+  padding-top:80px;
+}
+.box{
+  background:#111;
+  width:330px;
+  margin:auto;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 0 15px #00ffcc;
+}
+h2{
+  color:#00ffcc;
+}
+#key{
+  font-size:26px;
+  font-weight:bold;
+  margin:20px 0;
+  color:#00ff66;
+}
+#status{
+  font-size:14px;
+  margin-top:10px;
+}
+button{
+  padding:12px 25px;
+  font-size:18px;
+  background:#00ffcc;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+button:hover{
+  background:#00ccaa;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>CRUSH AX MODS</h2>
+  <div id="key">CRUSHAX-XXXXX</div>
+  <button onclick="generateKey()">Generate Key</button>
+  <div id="status"></div>
+</div>
+
+<script>
+const VALID_TIME = 24 * 60 * 60 * 1000; // 24 hours
+
+function generateKey(){
+  let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let random = "";
+  for(let i=0;i<5;i++){
+    random += chars[Math.floor(Math.random()*chars.length)];
+  }
+  let key = "CRUSHAX-" + random;
+  let now = new Date().getTime();
+
+  localStorage.setItem("crushax_key", key);
+  localStorage.setItem("crushax_time", now);
+
+  showKey();
+}
+
+function showKey(){
+  let key = localStorage.getItem("crushax_key");
+  let time = localStorage.getItem("crushax_time");
+
+  if(!key || !time){
+    return;
+  }
+
+  let now = new Date().getTime();
+  if(now - time > VALID_TIME){
+    document.getElementById("key").innerText = "KEY EXPIRED";
+    document.getElementById("key").style.color = "red";
+    document.getElementById("status").innerText = "Please generate new key";
+    localStorage.removeItem("crushax_key");
+    localStorage.removeItem("crushax_time");
+  } else {
+    let remaining = VALID_TIME - (now - time);
+    let hours = Math.floor(remaining / (1000*60*60));
+    document.getElementById("key").innerText = key;
+    document.getElementById("status").innerText =
+      "Valid for: " + hours + " hour(s)";
+  }
+}
+
+showKey();
+</script>
+
+</body>
+</html>
